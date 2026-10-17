@@ -1031,3 +1031,17 @@ HRESULT STDMETHODCALLTYPE WrappedID3D12DeviceFactory::GetConfigurationInterface(
 
   return E_NOINTERFACE;
 }
+
+// Entry point for an application-local proxy d3d12.dll (see Rupture's scripts/rdc/proxy). A proxy
+// sits where hooking cannot reach (for example NVIDIA Streamline resolving d3d12.dll by name), so it
+// calls this with the real D3D12CreateDevice and gets back RenderDoc's wrapped device.
+extern "C" __declspec(dllexport) HRESULT WINAPI RENDERDOC_Proxy_D3D12CreateDevice(
+    PFN_D3D12_CREATE_DEVICE real, IUnknown *pAdapter, D3D_FEATURE_LEVEL MinimumFeatureLevel,
+    REFIID riid, void **ppDevice)
+{
+  return CreateD3D12_Internal(
+      [real](IUnknown *adapter, D3D_FEATURE_LEVEL level, REFIID iid, void **device) {
+        return real(adapter, level, iid, device);
+      },
+      NULL, pAdapter, MinimumFeatureLevel, riid, ppDevice);
+}

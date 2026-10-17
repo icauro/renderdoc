@@ -370,3 +370,11 @@ private:
 };
 
 DXGIHook DXGIHook::dxgihooks;
+
+// Entry point for an application-local proxy dxgi.dll: after the real CreateDXGIFactory* succeeds the
+// proxy passes the factory here to be wrapped, exactly as the hooked functions above do.
+extern "C" __declspec(dllexport) void WINAPI RENDERDOC_Proxy_DXGIHandleWrap(const char *name,
+                                                                          REFIID riid, void **ppFactory)
+{
+  RefCountDXGIObject::HandleWrap(name, riid, ppFactory);
+}
